@@ -173,7 +173,7 @@ def run_hybrid_woa_gwo(base_ppc, variables_metadata, constraints_metadata, eval_
     fitness = np.zeros(pop_size)
     
     if verbose:
-        print(f"Hybrid Estafet: Inisialisasi {pop_size} agen. WOA s/d iter {transition_iter}, lalu GWO...")
+        print(f"Hybrid Estafet (WOA->GWO): Inisialisasi {pop_size} agen. WOA s/d iter {transition_iter}, lalu GWO...")
         
     for i in range(pop_size):
         fitness[i] = eval_func(X[i], base_ppc, variables_metadata, constraints_metadata)
@@ -193,14 +193,13 @@ def run_hybrid_woa_gwo(base_ppc, variables_metadata, constraints_metadata, eval_
     it = 0
     
     while it < max_iter_safety:
-        nominal_max_iter = transition_iter * 2 # Misal total iterasi efektif 500
+        nominal_max_iter = transition_iter * 2 
         a = 2.0 - min(it, nominal_max_iter) * (2.0 / nominal_max_iter)
         
         is_woa_phase = it < transition_iter
         
         for i in range(pop_size):
             if is_woa_phase:
-                # WOA Update Mechanism (Eksplorasi)
                 r1, r2 = np.random.rand(num_vars), np.random.rand(num_vars)
                 A = 2 * a * r1 - a
                 C = 2 * r2
@@ -209,22 +208,18 @@ def run_hybrid_woa_gwo(base_ppc, variables_metadata, constraints_metadata, eval_
                 
                 if p < 0.5:
                     if np.any(np.abs(A) >= 1):
-                        # Exploration
                         rand_idx = np.random.randint(0, pop_size)
                         X_rand = X[rand_idx].copy()
                         D_X_rand = np.abs(C * X_rand - X[i])
                         X_new = np.where(np.abs(A) >= 1, X_rand - A * D_X_rand, X_alpha - A * np.abs(C * X_alpha - X[i]))
                     else:
-                        # Exploitation (Encircling)
                         D_Leader = np.abs(C * X_alpha - X[i])
                         X_new = X_alpha - A * D_Leader
                 else:
-                    # Exploitation (Spiral)
                     b_const = 1.0
                     D_Leader = np.abs(X_alpha - X[i])
                     X_new = D_Leader * np.exp(b_const * l) * np.cos(2 * np.pi * l) + X_alpha
             else:
-                # GWO Update Mechanism (Eksploitasi)
                 r1_a, r2_a = np.random.rand(num_vars), np.random.rand(num_vars)
                 A1 = 2 * a * r1_a - a; C1 = 2 * r2_a
                 D_alpha = np.abs(C1 * X_alpha - X[i])
@@ -242,7 +237,6 @@ def run_hybrid_woa_gwo(base_ppc, variables_metadata, constraints_metadata, eval_
                 
                 X_new = (X1 + X2 + X3) / 3.0
                 
-            # Boundary checks
             mask_lower = X_new < lb
             if np.any(mask_lower): X_new[mask_lower] = lb[mask_lower] + np.random.rand(np.sum(mask_lower)) * (ub[mask_lower] - lb[mask_lower]) * 0.1
             mask_upper = X_new > ub
@@ -252,7 +246,6 @@ def run_hybrid_woa_gwo(base_ppc, variables_metadata, constraints_metadata, eval_
             X[i] = X_new
             fitness[i] = eval_func(X[i], base_ppc, variables_metadata, constraints_metadata)
             
-        # Update Alpha, Beta, Delta
         for i in range(pop_size):
             if fitness[i] < fit_alpha:
                 fit_alpha, X_alpha = fitness[i], X[i].copy()
@@ -264,10 +257,10 @@ def run_hybrid_woa_gwo(base_ppc, variables_metadata, constraints_metadata, eval_
         convergence_curve.append(fit_alpha)
         if verbose and (it + 1) % 10 == 0: 
             fase = "WOA" if is_woa_phase else "GWO"
-            print(f"Hybrid ({fase}): Iterasi {it+1} - Fitness Terbaik: {fit_alpha:.6f}")
+            print(f"Hybrid WOA-GWO ({fase}): Iterasi {it+1} - Fitness Terbaik: {fit_alpha:.6f}")
             
         if it == transition_iter - 1:
-            no_improve_count = 0 # Reset kesabaran saat transisi fase
+            no_improve_count = 0 
             if verbose: print("--- Memulai Fase Eksploitasi (GWO) ---")
             
         if fit_alpha < best_fit_history - tol:
@@ -276,7 +269,119 @@ def run_hybrid_woa_gwo(base_ppc, variables_metadata, constraints_metadata, eval_
             no_improve_count += 1
             
         if no_improve_count >= patience and not is_woa_phase:
-            if verbose: print(f"Hybrid konvergen pada iterasi {it+1} di fase GWO")
+            if verbose: print(f"Hybrid WOA-GWO konvergen pada iterasi {it+1} di fase GWO")
+            break
+        it += 1
+            
+    return X_alpha, fit_alpha, np.array(convergence_curve), time.time() - t_start
+
+def run_hybrid_gwo_woa(base_ppc, variables_metadata, constraints_metadata, eval_func, pop_size=200, transition_iter=250, patience=50, tol=1e-6, verbose=True):
+    t_start = time.time()
+    num_vars = len(variables_metadata)
+    lb = np.array([m['lower_bound'] for m in variables_metadata])
+    ub = np.array([m['upper_bound'] for m in variables_metadata])
+    
+    X = np.random.uniform(lb, ub, (pop_size, num_vars))
+    fitness = np.zeros(pop_size)
+    
+    if verbose:
+        print(f"Hybrid Terbalik (GWO->WOA): Inisialisasi {pop_size} agen. GWO s/d iter {transition_iter}, lalu WOA...")
+        
+    for i in range(pop_size):
+        fitness[i] = eval_func(X[i], base_ppc, variables_metadata, constraints_metadata)
+        while fitness[i] >= LARGE_FITNESS:
+            X[i] = np.random.uniform(lb, ub)
+            fitness[i] = eval_func(X[i], base_ppc, variables_metadata, constraints_metadata)
+            
+    sorted_idx = np.argsort(fitness)
+    X_alpha, fit_alpha = X[sorted_idx[0]].copy(), fitness[sorted_idx[0]]
+    X_beta, fit_beta = X[sorted_idx[1]].copy(), fitness[sorted_idx[1]]
+    X_delta, fit_delta = X[sorted_idx[2]].copy(), fitness[sorted_idx[2]]
+    
+    convergence_curve = []
+    best_fit_history = fit_alpha
+    no_improve_count = 0
+    max_iter_safety = 5000
+    it = 0
+    
+    while it < max_iter_safety:
+        nominal_max_iter = transition_iter * 2 
+        a = 2.0 - min(it, nominal_max_iter) * (2.0 / nominal_max_iter)
+        
+        is_gwo_phase = it < transition_iter
+        
+        for i in range(pop_size):
+            if is_gwo_phase:
+                r1_a, r2_a = np.random.rand(num_vars), np.random.rand(num_vars)
+                A1 = 2 * a * r1_a - a; C1 = 2 * r2_a
+                D_alpha = np.abs(C1 * X_alpha - X[i])
+                X1 = X_alpha - A1 * D_alpha
+                
+                r1_b, r2_b = np.random.rand(num_vars), np.random.rand(num_vars)
+                A2 = 2 * a * r1_b - a; C2 = 2 * r2_b
+                D_beta = np.abs(C2 * X_beta - X[i])
+                X2 = X_beta - A2 * D_beta
+                
+                r1_d, r2_d = np.random.rand(num_vars), np.random.rand(num_vars)
+                A3 = 2 * a * r1_d - a; C3 = 2 * r2_d
+                D_delta = np.abs(C3 * X_delta - X[i])
+                X3 = X_delta - A3 * D_delta
+                
+                X_new = (X1 + X2 + X3) / 3.0
+            else:
+                r1, r2 = np.random.rand(num_vars), np.random.rand(num_vars)
+                A = 2 * a * r1 - a
+                C = 2 * r2
+                p = np.random.rand()
+                l = np.random.uniform(-1, 1)
+                
+                if p < 0.5:
+                    if np.any(np.abs(A) >= 1):
+                        rand_idx = np.random.randint(0, pop_size)
+                        X_rand = X[rand_idx].copy()
+                        D_X_rand = np.abs(C * X_rand - X[i])
+                        X_new = np.where(np.abs(A) >= 1, X_rand - A * D_X_rand, X_alpha - A * np.abs(C * X_alpha - X[i]))
+                    else:
+                        D_Leader = np.abs(C * X_alpha - X[i])
+                        X_new = X_alpha - A * D_Leader
+                else:
+                    b_const = 1.0
+                    D_Leader = np.abs(X_alpha - X[i])
+                    X_new = D_Leader * np.exp(b_const * l) * np.cos(2 * np.pi * l) + X_alpha
+                
+            mask_lower = X_new < lb
+            if np.any(mask_lower): X_new[mask_lower] = lb[mask_lower] + np.random.rand(np.sum(mask_lower)) * (ub[mask_lower] - lb[mask_lower]) * 0.1
+            mask_upper = X_new > ub
+            if np.any(mask_upper): X_new[mask_upper] = ub[mask_upper] - np.random.rand(np.sum(mask_upper)) * (ub[mask_upper] - lb[mask_upper]) * 0.1
+            X_new = np.clip(X_new, lb, ub)
+            
+            X[i] = X_new
+            fitness[i] = eval_func(X[i], base_ppc, variables_metadata, constraints_metadata)
+            
+        for i in range(pop_size):
+            if fitness[i] < fit_alpha:
+                fit_alpha, X_alpha = fitness[i], X[i].copy()
+            elif fitness[i] < fit_beta:
+                fit_beta, X_beta = fitness[i], X[i].copy()
+            elif fitness[i] < fit_delta:
+                fit_delta, X_delta = fitness[i], X[i].copy()
+                
+        convergence_curve.append(fit_alpha)
+        if verbose and (it + 1) % 10 == 0: 
+            fase = "GWO" if is_gwo_phase else "WOA"
+            print(f"Hybrid Terbalik ({fase}): Iterasi {it+1} - Fitness Terbaik: {fit_alpha:.6f}")
+            
+        if it == transition_iter - 1:
+            no_improve_count = 0 
+            if verbose: print("--- Memulai Fase Eksploitasi (WOA) ---")
+            
+        if fit_alpha < best_fit_history - tol:
+            best_fit_history, no_improve_count = fit_alpha, 0
+        else:
+            no_improve_count += 1
+            
+        if no_improve_count >= patience and not is_gwo_phase:
+            if verbose: print(f"Hybrid Terbalik konvergen pada iterasi {it+1} di fase WOA")
             break
         it += 1
             
@@ -295,6 +400,7 @@ def main():
     
     pop_size = 100
     patience = 50
+    trans_iter = 250
     
     print("\n--- Running Whale Optimization Algorithm (WOA) ---")
     x_woa, fit_woa, curve_woa, time_woa = run_woa(base_ppc, variables_metadata, constraints_metadata, evaluate_fitness, pop_size=pop_size, patience=patience)
@@ -305,16 +411,20 @@ def main():
     _, det_gwo = evaluate_fitness(x_gwo, base_ppc, variables_metadata, constraints_metadata, return_details=True)
     
     print("\n--- Running Hybrid WOA-GWO (Estafet) ---")
-    trans_iter = 250
     x_hyb, fit_hyb, curve_hyb, time_hyb = run_hybrid_woa_gwo(base_ppc, variables_metadata, constraints_metadata, evaluate_fitness, pop_size=200, transition_iter=trans_iter, patience=patience)
     _, det_hyb = evaluate_fitness(x_hyb, base_ppc, variables_metadata, constraints_metadata, return_details=True)
+    
+    print("\n--- Running Hybrid GWO-WOA (Terbalik) ---")
+    x_hyb_inv, fit_hyb_inv, curve_hyb_inv, time_hyb_inv = run_hybrid_gwo_woa(base_ppc, variables_metadata, constraints_metadata, evaluate_fitness, pop_size=200, transition_iter=trans_iter, patience=patience)
+    _, det_hyb_inv = evaluate_fitness(x_hyb_inv, base_ppc, variables_metadata, constraints_metadata, return_details=True)
     
     print("\n" + "="*60)
     print("FINAL COMPARISON RESULTS")
     print("="*60)
-    print(f"WOA    | Fit: {fit_woa:.5f} | Ploss: {det_woa['p_loss']:.5f} MW | VD: {det_woa['voltage_deviation']:.5f} p.u. | Waktu: {time_woa:.2f} s")
-    print(f"GWO    | Fit: {fit_gwo:.5f} | Ploss: {det_gwo['p_loss']:.5f} MW | VD: {det_gwo['voltage_deviation']:.5f} p.u. | Waktu: {time_gwo:.2f} s")
-    print(f"HYBRID | Fit: {fit_hyb:.5f} | Ploss: {det_hyb['p_loss']:.5f} MW | VD: {det_hyb['voltage_deviation']:.5f} p.u. | Waktu: {time_hyb:.2f} s")
+    print(f"WOA        | Fit: {fit_woa:.5f} | Ploss: {det_woa['p_loss']:.5f} MW | VD: {det_woa['voltage_deviation']:.5f} p.u. | Waktu: {time_woa:.2f} s")
+    print(f"GWO        | Fit: {fit_gwo:.5f} | Ploss: {det_gwo['p_loss']:.5f} MW | VD: {det_gwo['voltage_deviation']:.5f} p.u. | Waktu: {time_gwo:.2f} s")
+    print(f"HYBRID 1   | Fit: {fit_hyb:.5f} | Ploss: {det_hyb['p_loss']:.5f} MW | VD: {det_hyb['voltage_deviation']:.5f} p.u. | Waktu: {time_hyb:.2f} s")
+    print(f"HYBRID INV | Fit: {fit_hyb_inv:.5f} | Ploss: {det_hyb_inv['p_loss']:.5f} MW | VD: {det_hyb_inv['voltage_deviation']:.5f} p.u. | Waktu: {time_hyb_inv:.2f} s")
     print("=" * 60)
     
     # ---------------------------
@@ -323,9 +433,9 @@ def main():
     output_dir = os.path.dirname(os.path.abspath(__file__))
     
     # 1. Bar Chart Comparison
-    labels = ['WOA Tunggal', 'GWO Tunggal', 'Hybrid WOA-GWO']
-    ploss = [det_woa['p_loss'], det_gwo['p_loss'], det_hyb['p_loss']]
-    vd = [det_woa['voltage_deviation'], det_gwo['voltage_deviation'], det_hyb['voltage_deviation']]
+    labels = ['WOA\nTunggal', 'GWO\nTunggal', 'Hybrid\nWOA-GWO', 'Hybrid\nGWO-WOA']
+    ploss = [det_woa['p_loss'], det_gwo['p_loss'], det_hyb['p_loss'], det_hyb_inv['p_loss']]
+    vd = [det_woa['voltage_deviation'], det_gwo['voltage_deviation'], det_hyb['voltage_deviation'], det_hyb_inv['voltage_deviation']]
     
     x = np.arange(len(labels))
     width = 0.35
@@ -341,7 +451,6 @@ def main():
     ax1.set_xticks(x)
     ax1.set_xticklabels(labels, fontsize=12)
     
-    # Add values on top of bars
     for bar in bars1:
         yval = bar.get_height()
         ax1.text(bar.get_x() + bar.get_width()/2, yval, f'{yval:.4f}', ha='center', va='bottom')
@@ -349,12 +458,11 @@ def main():
         yval = bar.get_height()
         ax2.text(bar.get_x() + bar.get_width()/2, yval, f'{yval:.4f}', ha='center', va='bottom')
         
-    # Legend
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
     ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper right')
     
-    chart_path = os.path.join(output_dir, 'objective_comparison_chart.png')
+    chart_path = os.path.join(output_dir, 'objective_comparison_chart_terbalik.png')
     plt.savefig(chart_path, dpi=300, bbox_inches='tight')
     print(f"Grafik perbandingan tersimpan di {chart_path}")
     
@@ -363,26 +471,26 @@ def main():
     plt.plot(range(1, len(curve_woa) + 1), curve_woa, label='WOA Tunggal', color='blue')
     plt.plot(range(1, len(curve_gwo) + 1), curve_gwo, label='GWO Tunggal', color='red')
     plt.plot(range(1, len(curve_hyb) + 1), curve_hyb, label='Hybrid WOA-GWO', color='green')
-    plt.title('Kurva Konvergensi Algoritma', fontsize=14)
+    plt.plot(range(1, len(curve_hyb_inv) + 1), curve_hyb_inv, label='Hybrid GWO-WOA', color='purple')
+    plt.title('Kurva Konvergensi Algoritma (Empat Varian)', fontsize=14)
     plt.xlabel('Iterasi', fontsize=12)
     plt.ylabel('Fitness Terbaik', fontsize=12)
     
-    # Custom x-ticks interval 5
-    max_iter = max(len(curve_woa), len(curve_gwo), len(curve_hyb))
+    max_iter = max(len(curve_woa), len(curve_gwo), len(curve_hyb), len(curve_hyb_inv))
     plt.xticks(np.arange(1, max_iter + 5, 5), rotation=90, fontsize=8)
     
     plt.legend()
     plt.grid(True, linestyle='--', alpha=0.7)
     
-    conv_path = os.path.join(output_dir, 'convergence_curves.png')
+    conv_path = os.path.join(output_dir, 'convergence_curves_terbalik.png')
     plt.savefig(conv_path, dpi=300, bbox_inches='tight')
     print(f"Kurva konvergensi tersimpan di {conv_path}")
 
     # 3. Waktu Eksekusi Bar Chart
-    times = [time_woa, time_gwo, time_hyb]
+    times = [time_woa, time_gwo, time_hyb, time_hyb_inv]
     
     plt.figure(figsize=(8, 5))
-    bars3 = plt.bar(labels, times, color=['blue', 'red', 'green'], alpha=0.7)
+    bars3 = plt.bar(labels, times, color=['blue', 'red', 'green', 'purple'], alpha=0.7)
     plt.title('Perbandingan Waktu Eksekusi', fontsize=14)
     plt.ylabel('Waktu (detik)', fontsize=12)
     
@@ -390,11 +498,11 @@ def main():
         yval = bar.get_height()
         plt.text(bar.get_x() + bar.get_width()/2, yval, f'{yval:.2f} s', ha='center', va='bottom')
         
-    time_chart_path = os.path.join(output_dir, 'execution_time_chart.png')
+    time_chart_path = os.path.join(output_dir, 'execution_time_chart_terbalik.png')
     plt.savefig(time_chart_path, dpi=300, bbox_inches='tight')
     print(f"Grafik waktu eksekusi tersimpan di {time_chart_path}")
 
-    # 4. Grafik Estafet / Fase Hybrid (Eksplorasi & Eksploitasi)
+    # 4. Grafik Estafet / Fase Hybrid WOA-GWO (Original)
     plt.figure(figsize=(10, 6))
     max_x = len(curve_hyb)
     
@@ -403,18 +511,13 @@ def main():
     if max_x > trans_iter:
         plt.plot(range(trans_iter, max_x + 1), curve_hyb[trans_iter-1:], color='blue', linewidth=2, label='Fitness GWO')
 
-    
-    # Shade for WOA
     if max_x > 0:
-        end_woa = min(max_x, trans_iter)
-        plt.axvspan(1, end_woa, color='lightblue', alpha=0.5, label=f'Fase Eksplorasi: WOA\n(Iterasi 1-{end_woa})')
-    
-    # Shade for GWO
+        plt.axvspan(1, end_woa, color='lightblue', alpha=0.5, label=f'WOA\n(1-{end_woa})')
     if max_x > trans_iter:
-        plt.axvspan(trans_iter, max_x, color='lightgreen', alpha=0.5, label=f'Fase Eksploitasi: GWO\n(Iterasi {trans_iter}-{max_x})')
-        plt.axvline(x=trans_iter, color='red', linestyle='--', linewidth=2, label='Titik Transisi (Estafet)')
+        plt.axvspan(trans_iter, max_x, color='lightgreen', alpha=0.5, label=f'GWO\n({trans_iter}-{max_x})')
+        plt.axvline(x=trans_iter, color='red', linestyle='--', linewidth=2, label='Transisi')
         
-    plt.title('Kurva Konvergensi Algoritma Hybrid (Eksplorasi → Eksploitasi)', fontsize=14)
+    plt.title('Kurva Konvergensi Hybrid WOA-GWO', fontsize=14)
     plt.xlabel('Iterasi', fontsize=12)
     plt.ylabel('Fitness Terbaik', fontsize=12)
     plt.legend()
@@ -422,7 +525,32 @@ def main():
     
     phase_path = os.path.join(output_dir, 'hybrid_phases.png')
     plt.savefig(phase_path, dpi=300, bbox_inches='tight')
-    print(f"Grafik fase hybrid tersimpan di {phase_path}")
+    print(f"Grafik fase hybrid WOA-GWO tersimpan di {phase_path}")
+    
+    # 5. Grafik Estafet / Fase Hybrid GWO-WOA (Terbalik)
+    plt.figure(figsize=(10, 6))
+    max_x_inv = len(curve_hyb_inv)
+    
+    end_gwo = min(max_x_inv, trans_iter)
+    plt.plot(range(1, end_gwo + 1), curve_hyb_inv[:end_gwo], color='blue', linewidth=2, label='Fitness GWO')
+    if max_x_inv > trans_iter:
+        plt.plot(range(trans_iter, max_x_inv + 1), curve_hyb_inv[trans_iter-1:], color='red', linewidth=2, label='Fitness WOA')
+
+    if max_x_inv > 0:
+        plt.axvspan(1, end_gwo, color='lightgreen', alpha=0.5, label=f'GWO\n(1-{end_gwo})')
+    if max_x_inv > trans_iter:
+        plt.axvspan(trans_iter, max_x_inv, color='lightblue', alpha=0.5, label=f'WOA\n({trans_iter}-{max_x_inv})')
+        plt.axvline(x=trans_iter, color='blue', linestyle='--', linewidth=2, label='Transisi')
+        
+    plt.title('Kurva Konvergensi Hybrid Terbalik (GWO-WOA)', fontsize=14)
+    plt.xlabel('Iterasi', fontsize=12)
+    plt.ylabel('Fitness Terbaik', fontsize=12)
+    plt.legend()
+    plt.grid(True, linestyle='--', alpha=0.5)
+    
+    phase_path_inv = os.path.join(output_dir, 'hybrid_terbalik_phases.png')
+    plt.savefig(phase_path_inv, dpi=300, bbox_inches='tight')
+    print(f"Grafik fase hybrid terbalik tersimpan di {phase_path_inv}")
 
 if __name__ == '__main__':
     main()
