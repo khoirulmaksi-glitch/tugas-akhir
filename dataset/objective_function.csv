@@ -1,0 +1,11 @@
+Objective_ID,Formula,Description
+
+OBJ1,Ploss,Minimize active power loss
+
+OBJ2,VD,Minimize voltage deviation
+
+OBJ3,Ploss+VD,Single objective ORPD
+
+OBJ4,Ploss+100*VD,Weighted ORPD
+
+OBJ5,Ploss+100*VD+10*Lindex,Enhanced ORPD with voltage stability

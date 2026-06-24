@@ -1,0 +1,67 @@
+Category,Variable,Bus/Branch,Min,Max,Unit,Description
+
+CONTROL_VARIABLE,Vg1,Bus1,0.95,1.10,p.u.,Generator voltage magnitude
+CONTROL_VARIABLE,Vg2,Bus2,0.95,1.10,p.u.,Generator voltage magnitude
+CONTROL_VARIABLE,Vg13,Bus13,0.95,1.10,p.u.,Generator voltage magnitude
+CONTROL_VARIABLE,Vg22,Bus22,0.95,1.10,p.u.,Generator voltage magnitude
+CONTROL_VARIABLE,Vg23,Bus23,0.95,1.10,p.u.,Generator voltage magnitude
+CONTROL_VARIABLE,Vg27,Bus27,0.95,1.10,p.u.,Generator voltage magnitude
+
+CONTROL_VARIABLE,Tap1,4-12,0.90,1.10,p.u.,Transformer tap ratio
+CONTROL_VARIABLE,Tap2,6-9,0.90,1.10,p.u.,Transformer tap ratio
+CONTROL_VARIABLE,Tap3,6-10,0.90,1.10,p.u.,Transformer tap ratio
+CONTROL_VARIABLE,Tap4,28-27,0.90,1.10,p.u.,Transformer tap ratio
+
+CONTROL_VARIABLE,Qc5,Bus5,0.00,0.30,p.u.,Shunt compensation
+CONTROL_VARIABLE,Qc24,Bus24,0.00,0.15,p.u.,Shunt compensation
+
+CONSTRAINT,VoltageLimit,All Bus,0.95,1.05,p.u.,Bus voltage constraint
+
+CONSTRAINT,Qg1,Bus1,-20,150,MVAr,Generator reactive power limit
+CONSTRAINT,Qg2,Bus2,-20,60,MVAr,Generator reactive power limit
+CONSTRAINT,Qg13,Bus13,-15,44.7,MVAr,Generator reactive power limit
+CONSTRAINT,Qg22,Bus22,-15,62.5,MVAr,Generator reactive power limit
+CONSTRAINT,Qg23,Bus23,-10,40,MVAr,Generator reactive power limit
+CONSTRAINT,Qg27,Bus27,-15,48.7,MVAr,Generator reactive power limit
+
+CONSTRAINT,S12,Line1-2,0,130,MVA,Thermal limit
+CONSTRAINT,S13,Line1-3,0,130,MVA,Thermal limit
+CONSTRAINT,S24,Line2-4,0,65,MVA,Thermal limit
+CONSTRAINT,S34,Line3-4,0,130,MVA,Thermal limit
+CONSTRAINT,S25,Line2-5,0,130,MVA,Thermal limit
+CONSTRAINT,S26,Line2-6,0,65,MVA,Thermal limit
+CONSTRAINT,S46,Line4-6,0,90,MVA,Thermal limit
+CONSTRAINT,S57,Line5-7,0,70,MVA,Thermal limit
+CONSTRAINT,S67,Line6-7,0,130,MVA,Thermal limit
+CONSTRAINT,S68,Line6-8,0,32,MVA,Thermal limit
+CONSTRAINT,S69,Line6-9,0,65,MVA,Thermal limit
+CONSTRAINT,S610,Line6-10,0,32,MVA,Thermal limit
+CONSTRAINT,S911,Line9-11,0,65,MVA,Thermal limit
+CONSTRAINT,S910,Line9-10,0,65,MVA,Thermal limit
+CONSTRAINT,S412,Line4-12,0,65,MVA,Thermal limit
+CONSTRAINT,S1213,Line12-13,0,65,MVA,Thermal limit
+CONSTRAINT,S1214,Line12-14,0,32,MVA,Thermal limit
+CONSTRAINT,S1215,Line12-15,0,32,MVA,Thermal limit
+CONSTRAINT,S1216,Line12-16,0,32,MVA,Thermal limit
+CONSTRAINT,S1415,Line14-15,0,16,MVA,Thermal limit
+CONSTRAINT,S1617,Line16-17,0,16,MVA,Thermal limit
+CONSTRAINT,S1518,Line15-18,0,16,MVA,Thermal limit
+CONSTRAINT,S1819,Line18-19,0,16,MVA,Thermal limit
+CONSTRAINT,S1920,Line19-20,0,32,MVA,Thermal limit
+CONSTRAINT,S1020,Line10-20,0,32,MVA,Thermal limit
+CONSTRAINT,S1017,Line10-17,0,32,MVA,Thermal limit
+CONSTRAINT,S1021,Line10-21,0,32,MVA,Thermal limit
+CONSTRAINT,S1022,Line10-22,0,32,MVA,Thermal limit
+CONSTRAINT,S2122,Line21-22,0,32,MVA,Thermal limit
+CONSTRAINT,S1523,Line15-23,0,16,MVA,Thermal limit
+CONSTRAINT,S2224,Line22-24,0,16,MVA,Thermal limit
+CONSTRAINT,S2324,Line23-24,0,16,MVA,Thermal limit
+CONSTRAINT,S2425,Line24-25,0,16,MVA,Thermal limit
+CONSTRAINT,S2526,Line25-26,0,16,MVA,Thermal limit
+CONSTRAINT,S2527,Line25-27,0,16,MVA,Thermal limit
+CONSTRAINT,S2827,Line28-27,0,65,MVA,Thermal limit
+CONSTRAINT,S2729,Line27-29,0,16,MVA,Thermal limit
+CONSTRAINT,S2730,Line27-30,0,16,MVA,Thermal limit
+CONSTRAINT,S2930,Line29-30,0,16,MVA,Thermal limit
+CONSTRAINT,S828,Line8-28,0,32,MVA,Thermal limit
+CONSTRAINT,S628,Line6-28,0,32,MVA,Thermal limit
