@@ -188,6 +188,7 @@ def run_hybrid_woa_gwo(base_ppc, variables_metadata, constraints_metadata, eval_
     
     convergence_curve = []
     best_fit_history = fit_alpha
+    vd_curve = []
     no_improve_count = 0
     max_iter_safety = 5000
     it = 0
@@ -262,6 +263,8 @@ def run_hybrid_woa_gwo(base_ppc, variables_metadata, constraints_metadata, eval_
                 fit_delta, X_delta = fitness[i], X[i].copy()
                 
         convergence_curve.append(fit_alpha)
+        _, details = eval_func(X_alpha, base_ppc, variables_metadata, constraints_metadata, return_details=True)
+        vd_curve.append(details['voltage_deviation'])
         if verbose and (it + 1) % 10 == 0: 
             fase = "WOA" if is_woa_phase else "GWO"
             print(f"Hybrid ({fase}): Iterasi {it+1} - Fitness Terbaik: {fit_alpha:.6f}")
@@ -280,6 +283,31 @@ def run_hybrid_woa_gwo(base_ppc, variables_metadata, constraints_metadata, eval_
             break
         it += 1
             
+    # Tambahkan plot grafik Hybrid
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, len(convergence_curve) + 1), convergence_curve, color='green', linewidth=2)
+    plt.title('Kurva Konvergensi - Hybrid WOA-GWO')
+    plt.xlabel('Iterasi')
+    plt.ylabel('Fitness Terbaik')
+    plt.grid(True)
+    
+    output_dir = os.path.dirname(os.path.abspath(__file__))
+    chart_path = os.path.join(output_dir, 'hybrid_individual_convergence.png')
+    plt.savefig(chart_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    # Plot grafik VD
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, len(vd_curve) + 1), vd_curve, color='orange', linewidth=2)
+    plt.title('Kurva Voltage Deviation (VD) - Hybrid WOA-GWO')
+    plt.xlabel('Iterasi')
+    plt.ylabel('Voltage Deviation (p.u.)')
+    plt.grid(True)
+    
+    vd_chart_path = os.path.join(output_dir, 'hybrid_individual_vd.png')
+    plt.savefig(vd_chart_path, dpi=300, bbox_inches='tight')
+    plt.close()
+
     return X_alpha, fit_alpha, np.array(convergence_curve), time.time() - t_start
 
 def main():

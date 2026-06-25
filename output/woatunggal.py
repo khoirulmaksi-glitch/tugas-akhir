@@ -1,5 +1,7 @@
 import time
 import numpy as np
+import matplotlib.pyplot as plt
+import os
 
 def run_woa(base_ppc, variables_metadata, constraints_metadata, eval_func, pop_size=100, patience=50, tol=1e-6, verbose=True):
     t_start = time.time()
@@ -26,6 +28,7 @@ def run_woa(base_ppc, variables_metadata, constraints_metadata, eval_func, pop_s
     global_best_fit = fitness[best_idx]
     
     convergence_curve = []
+    vd_curve = []
     best_fit_history = global_best_fit
     no_improve_count = 0
     b_const = 1.0
@@ -77,6 +80,8 @@ def run_woa(base_ppc, variables_metadata, constraints_metadata, eval_func, pop_s
             global_best_fit = fitness[best_idx]
             
         convergence_curve.append(global_best_fit)
+        _, details = eval_func(global_best_X, base_ppc, variables_metadata, constraints_metadata, return_details=True)
+        vd_curve.append(details['voltage_deviation'])
         
         if verbose and (it + 1) % 10 == 0:
             print(f"WOA: Iterasi {it+1} - Fitness Terbaik: {global_best_fit:.6f}")
@@ -94,4 +99,30 @@ def run_woa(base_ppc, variables_metadata, constraints_metadata, eval_func, pop_s
         it += 1
             
     run_time = time.time() - t_start
+    
+    # Tambahkan plot grafik WOA tunggal
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, len(convergence_curve) + 1), convergence_curve, color='blue', linewidth=2)
+    plt.title('Kurva Konvergensi - WOA Tunggal')
+    plt.xlabel('Iterasi')
+    plt.ylabel('Fitness Terbaik')
+    plt.grid(True)
+    
+    output_dir = os.path.dirname(os.path.abspath(__file__))
+    chart_path = os.path.join(output_dir, 'woa_individual_convergence.png')
+    plt.savefig(chart_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    # Plot grafik VD
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, len(vd_curve) + 1), vd_curve, color='orange', linewidth=2)
+    plt.title('Kurva Voltage Deviation (VD) - WOA Tunggal')
+    plt.xlabel('Iterasi')
+    plt.ylabel('Voltage Deviation (p.u.)')
+    plt.grid(True)
+    
+    vd_chart_path = os.path.join(output_dir, 'woa_individual_vd.png')
+    plt.savefig(vd_chart_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    
     return global_best_X, global_best_fit, np.array(convergence_curve), run_time

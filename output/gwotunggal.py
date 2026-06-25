@@ -1,5 +1,7 @@
 import time
 import numpy as np
+import matplotlib.pyplot as plt
+import os
 
 def run_gwo(base_ppc, variables_metadata, constraints_metadata, eval_func, pop_size=100, patience=50, tol=1e-6, verbose=True):
     t_start = time.time()
@@ -29,6 +31,7 @@ def run_gwo(base_ppc, variables_metadata, constraints_metadata, eval_func, pop_s
     fit_delta = fitness[sorted_idx[2]]
     
     convergence_curve = []
+    vd_curve = []
     best_fit_history = fit_alpha
     no_improve_count = 0
     
@@ -81,6 +84,8 @@ def run_gwo(base_ppc, variables_metadata, constraints_metadata, eval_func, pop_s
                 X_delta = X[i].copy()
                 
         convergence_curve.append(fit_alpha)
+        _, details = eval_func(X_alpha, base_ppc, variables_metadata, constraints_metadata, return_details=True)
+        vd_curve.append(details['voltage_deviation'])
         
         if verbose and (it + 1) % 10 == 0:
             print(f"GWO: Iterasi {it+1} - Fitness Terbaik: {fit_alpha:.6f}")
@@ -98,4 +103,30 @@ def run_gwo(base_ppc, variables_metadata, constraints_metadata, eval_func, pop_s
         it += 1
             
     run_time = time.time() - t_start
+    
+    # Tambahkan plot grafik GWO tunggal
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, len(convergence_curve) + 1), convergence_curve, color='red', linewidth=2)
+    plt.title('Kurva Konvergensi - GWO Tunggal')
+    plt.xlabel('Iterasi')
+    plt.ylabel('Fitness Terbaik')
+    plt.grid(True)
+    
+    output_dir = os.path.dirname(os.path.abspath(__file__))
+    chart_path = os.path.join(output_dir, 'gwo_individual_convergence.png')
+    plt.savefig(chart_path, dpi=300, bbox_inches='tight')
+    plt.close()
+
+    # Plot grafik VD
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, len(vd_curve) + 1), vd_curve, color='orange', linewidth=2)
+    plt.title('Kurva Voltage Deviation (VD) - GWO Tunggal')
+    plt.xlabel('Iterasi')
+    plt.ylabel('Voltage Deviation (p.u.)')
+    plt.grid(True)
+    
+    vd_chart_path = os.path.join(output_dir, 'gwo_individual_vd.png')
+    plt.savefig(vd_chart_path, dpi=300, bbox_inches='tight')
+    plt.close()
+
     return X_alpha, fit_alpha, np.array(convergence_curve), run_time
