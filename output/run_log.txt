@@ -1,0 +1,13 @@
+Starting ORPD Simulation (Mode: debug)
+============================================================
+Running hybrid_woa_gwo_noes
+Population     : 10
+Max Iteration  : 10
+Total Runs     : 2
+============================================================\n
+============================================================
+Running hybrid_woa_gwo
+Population     : 10
+Max Iteration  : 10
+Total Runs     : 2
+============================================================\n

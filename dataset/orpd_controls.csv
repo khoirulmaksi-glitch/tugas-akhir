@@ -1,0 +1,20 @@
+﻿control_id,variable_name,control_type,bus,from_bus,to_bus,initial_value,min_value,max_value,unit,source_row_id,description
+1,VG_1,generator_voltage,1,,,1,0.95,1.05,p.u.,1,Generator voltage setpoint
+2,VG_2,generator_voltage,2,,,1,0.95,1.05,p.u.,2,Generator voltage setpoint
+3,VG_5,generator_voltage,5,,,1,0.95,1.05,p.u.,3,Generator voltage setpoint
+4,VG_8,generator_voltage,8,,,1,0.95,1.05,p.u.,4,Generator voltage setpoint
+5,VG_11,generator_voltage,11,,,1,0.95,1.05,p.u.,5,Generator voltage setpoint
+6,VG_13,generator_voltage,13,,,1,0.95,1.05,p.u.,6,Generator voltage setpoint
+7,T_4_12,transformer_tap,,4,12,1,0.9,1.1,p.u.,15,Transformer tap ratio; branch matching is bidirectional
+8,T_6_9,transformer_tap,,6,9,1,0.9,1.1,p.u.,11,Transformer tap ratio; branch matching is bidirectional
+9,T_6_10,transformer_tap,,6,10,1,0.9,1.1,p.u.,12,Transformer tap ratio; branch matching is bidirectional
+10,T_27_28,transformer_tap,,27,28,1,0.9,1.1,p.u.,36,Transformer tap ratio; branch matching is bidirectional
+11,QC_6,reactive_compensator,6,,,0,0,40,MVAr,,Adjustable reactive power injection
+12,QC_7,reactive_compensator,7,,,0,0,40,MVAr,,Adjustable reactive power injection
+13,QC_9,reactive_compensator,9,,,0,0,40,MVAr,,Adjustable reactive power injection
+14,QC_11,reactive_compensator,11,,,0,0,40,MVAr,,Adjustable reactive power injection
+15,QC_14,reactive_compensator,14,,,0,0,40,MVAr,,Adjustable reactive power injection
+16,QC_15,reactive_compensator,15,,,0,0,40,MVAr,,Adjustable reactive power injection
+17,QC_17,reactive_compensator,17,,,0,0,40,MVAr,,Adjustable reactive power injection
+18,QC_18,reactive_compensator,18,,,0,0,40,MVAr,,Adjustable reactive power injection
+19,QC_23,reactive_compensator,23,,,0,0,40,MVAr,,Adjustable reactive power injection

@@ -1,0 +1,3 @@
+Method,Best Ploss,Mean Ploss,Std Ploss,Best VD,Mean VD,Std VD,Best Overall,Mean Overall,Std Overall,Mean Iter,Mean Time,Feasibility
+Hybrid_WOA_GWO_NoES,6.7999,6.7999,0.0,1.6434,1.6434,0.0,52559332.5202,52559332.5202,0.0,10.0,0.5837,0.0
+Hybrid_WOA_GWO,6.7999,6.7999,0.0,1.6434,1.6434,0.0,52559332.5202,52559332.5202,0.0,10.0,0.571,0.0

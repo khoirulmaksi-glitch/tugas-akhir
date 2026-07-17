@@ -1,0 +1,22 @@
+﻿parameter,value,unit_or_note
+dataset_name,case30_gto_orpd,
+system,IEEE 30-bus reconfigured for ORPD,
+baseMVA,100,MVA
+number_of_buses,30,bus
+number_of_generators,6,unit
+number_of_branches,41,branch
+number_of_areas,3,area
+total_active_load,283.4,MW
+total_reactive_load,126.2,MVAr
+slack_bus,1,bus
+generator_buses,"1,2,5,8,11,13",bus list
+voltage_min,0.95,p.u.
+voltage_max,1.05,p.u.
+tap_min,0.9,p.u.
+tap_max,1.1,p.u.
+compensator_min,0,MVAr
+compensator_max,40,MVAr
+number_of_control_variables,19,variable
+generator_voltage_controls,6,variable
+transformer_tap_controls,4,variable
+reactive_compensator_controls,9,variable
